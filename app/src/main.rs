@@ -2,6 +2,9 @@ use serde::Deserialize;
 use reqwest::Error;
 use sha256_wrapper::sha256hash;
 use hex;
+use tokio::sync::mpsc;
+use std::time::{Duration, Instant};
+use tokio::time;
 
 #[derive(Deserialize, Debug)]
 struct Password {
@@ -21,14 +24,29 @@ impl Sha256 {
     }
 }
 
+async fn getter(len: usize, mpsc_tx: mpsc::Sender<Password>) -> Result<(), Error> {
+    for _ in 0..3 {
+        let request_url = format!("https://passwordinator.herokuapp.com/generate?len={len}",
+                                  len = len);
+        println!("{}", request_url);
+        let response = reqwest::get(&request_url).await?;
+
+        let password: Password = response.json().await?;
+        mpsc_tx.send(password).await;
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let request_url = format!("https://passwordinator.herokuapp.com/generate?len={len}",
-                              len = 32);
-    println!("{}", request_url);
-    let response = reqwest::get(&request_url).await?;
+    let (tx, mut rx) = mpsc::channel(32);
+    let tx2 = tx.clone();
+    tokio::task::spawn(getter(32, tx) );
+    tokio::task::spawn(getter(64, tx2) );
 
-    let password: Password = response.json().await?;
-    println!("{:?}|{:?}", password, Sha256::from_pwd(&password));
+    // time::sleep(time::Duration::from_secs(5)).await;
+    while let Some(pwd) = rx.recv().await {
+        println!("{:?}|{:?}", pwd, Sha256::from_pwd(&pwd));
+    }
     Ok(())
 }
