@@ -2,8 +2,6 @@
 name = "sha256-wrapper"
 version = "0.1.0"
 edition = "2021"
-#links = ["openssl", "crypto"]
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 
@@ -11,4 +9,4 @@ edition = "2021"
 hex = "0.4"
 
 [build-dependencies]
-bindgen = "0.59.2"
+bindgen = { version = "0.59.2", default_features = false}
