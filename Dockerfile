@@ -17,8 +17,9 @@ RUN apt update && \
     useradd --system --shell /bin/bash --groups sudo server
 
 COPY --from=builder /usr/local/cargo/bin/server /usr/local/bin/server
+COPY --from=builder /usr/local/cargo/bin/client /usr/local/bin/client
 
-USER server
-EXPOSE 50051
+# USER server
+# EXPOSE 50051
 
 ENTRYPOINT ["/usr/local/bin/server"]

@@ -1,5 +1,5 @@
-use clap::Parser;
 use crate::hashed_password_generator_client::HashedPasswordGeneratorClient;
+use clap::Parser;
 
 tonic::include_proto!("hasher");
 
@@ -8,13 +8,14 @@ tonic::include_proto!("hasher");
 struct Opts {
     /// Server address to access
     #[clap(short, long, default_value = "[::1]:50051")]
-    server: String,
+    address: String,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opts = Opts::parse();
-    let mut client = HashedPasswordGeneratorClient::connect(format!("http://{}", opts.server)).await?;
+    let mut client =
+        HashedPasswordGeneratorClient::connect(format!("http://{}", opts.address)).await?;
     let mut stream = client.generate_password(()).await?.into_inner();
     while let Some(hashed_password) = stream.message().await? {
         println!("{:?}", hashed_password)
