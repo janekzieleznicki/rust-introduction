@@ -1,7 +1,7 @@
 FROM rust:slim-buster as builder-base
 WORKDIR /usr/src/myapp
 COPY . .
-RUN rustup component add rustfmt
+# RUN rustup component add rustfmt
 
 FROM builder-base as builder
 
@@ -12,13 +12,14 @@ RUN cargo install --path app
 FROM debian:buster-slim
 
 RUN apt update && \
-        apt install -y openssl && \
+        apt install -y openssl ca-certificates && \
+        update-ca-certificates && \
         rm -rf /var/lib/apt/lists/* && \
     useradd --system --shell /bin/bash --groups sudo server
 
 COPY --from=builder /usr/local/cargo/bin/server /usr/local/bin/server
 COPY --from=builder /usr/local/cargo/bin/client /usr/local/bin/client
-
+ENV RUST_LOG=debug
 # USER server
 # EXPOSE 50051
 

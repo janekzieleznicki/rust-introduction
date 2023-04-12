@@ -14,7 +14,7 @@ pub fn sha256hash(string: &str) -> [u8; SHA256_DIGEST_LENGTH as usize] {
         SHA256_Update(
             sha_ctx.as_mut_ptr(),
             string.as_ptr() as *mut _,
-            string.len() as u64,
+            string.len() as usize,
         );
         SHA256_Final(buf.as_mut_ptr(), sha_ctx.as_mut_ptr());
     }
@@ -39,7 +39,7 @@ mod tests {
             SHA256_Update(
                 sha_ctx.as_mut_ptr(),
                 long_string.as_ptr() as *mut _,
-                long_string.len() as u64,
+                long_string.len() as usize,
             );
             let mut buf = [0u8; SHA256_DIGEST_LENGTH as usize];
             SHA256_Final(buf.as_mut_ptr(), sha_ctx.as_mut_ptr());

@@ -1,3 +1,5 @@
+syntax = "proto3";
+
 package hasher;
 
 import "google/protobuf/empty.proto";
@@ -7,7 +9,7 @@ service HashedPasswordGenerator {
 }
 
 message HashedPassword {
-   optional int32 index = 1;
-   required string password = 2;
-   required string hash = 3;
+   int32 index = 1;
+   string password = 2;
+   string hash = 3;
 }
