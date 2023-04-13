@@ -23,20 +23,20 @@ async fn generator_loop(
     loop {
         count += 1;
         let request_url = format!(
-            "https://passwordinator.herokuapp.com/generate?len={len}",
-            len = 64
+            "https://passwordinator.onrender.com/?len={len}",
+            len = 31+count
         );
-        println!("{}", request_url);
-        let response = reqwest::get(&request_url).await?;
-
-        let password: Password = response.json().await?;
-
-        tx.send(Ok(HashedPassword {
-            index: Some(count as i32),
-            password: password.data.to_string(),
-            hash: hex::encode(sha256hash(password.data.as_str())),
-        }))
-        .await?;
+        log::info!("Count: {} URL {}",count,request_url);
+        match reqwest::get(&request_url).await {
+            Err(e) => log::error!("Server returned {}",e),
+            Ok(response) => { let password: Password = response.json().await ?;
+                tx.send(Ok(HashedPassword {
+                    index: count as i32,
+                    password: password.data.to_string(),
+                    hash: hex::encode(sha256hash(password.data.as_str())),
+                })).await ?;
+            }
+        }
     }
 }
 
@@ -72,6 +72,7 @@ struct Opts {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
     let opts: Opts = Opts::parse();
     let addr = opts.address.parse()?;
     println!("Spawning grpc server on {}", addr);

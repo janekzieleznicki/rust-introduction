@@ -1,25 +1,21 @@
-FROM rust:slim-buster as builder-base
+FROM clearlinux as builder
+ARG PROTO_VER=22.2
 WORKDIR /usr/src/myapp
 COPY . .
-RUN rustup component add rustfmt
 
-FROM builder-base as builder
+RUN swupd bundle-add rust-basic llvm protobuf devpkg-openssl devpkg-protobuf-c wget
+RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v${PROTO_VER}/protobuf-${PROTO_VER}.tar.gz && \
+    tar -xvzf protobuf-${PROTO_VER}.tar.gz && \
+    export PROTOC_INCLUDE=$(pwd)/protobuf-${PROTO_VER}/src/ && \
+    cargo install --path app
 
-RUN apt update && \
-            apt install -y libssl-dev protobuf-compiler libclang-dev llvm-dev pkg-config clang
-RUN cargo install --path app
+FROM clearlinux
 
-FROM debian:buster-slim
+RUN swupd bundle-add lib-openssl
 
-RUN apt update && \
-        apt install -y openssl && \
-        rm -rf /var/lib/apt/lists/* && \
-    useradd --system --shell /bin/bash --groups sudo server
+COPY --from=builder /root/.cargo/bin/server /usr/local/bin/server
+COPY --from=builder /root/.cargo/bin/client /usr/local/bin/client
+ENV RUST_LOG=debug
 
-COPY --from=builder /usr/local/cargo/bin/server /usr/local/bin/server
-COPY --from=builder /usr/local/cargo/bin/client /usr/local/bin/client
-
-# USER server
-# EXPOSE 50051
 
 ENTRYPOINT ["/usr/local/bin/server"]

@@ -9,4 +9,4 @@ edition = "2021"
 hex = "0.4"
 
 [build-dependencies]
-bindgen = { version = "0.59.2", default_features = false}
+bindgen = { version = "0.65.1", default_features = false}
