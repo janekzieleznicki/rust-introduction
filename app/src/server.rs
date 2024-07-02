@@ -13,7 +13,7 @@ tonic::include_proto!("hasher");
 
 #[derive(Deserialize, Debug)]
 struct Password {
-    data: String,
+    password: String,
 }
 
 async fn generator_loop(
@@ -23,7 +23,7 @@ async fn generator_loop(
     loop {
         count += 1;
         let request_url = format!(
-            "https://passwordinator.onrender.com/?len={len}",
+            "https://api.genratr.com/?length={len}&uppercase&lowercase",
             len = 31+count
         );
         log::info!("Count: {} URL {}",count,request_url);
@@ -32,8 +32,8 @@ async fn generator_loop(
             Ok(response) => { let password: Password = response.json().await ?;
                 tx.send(Ok(HashedPassword {
                     index: count as i32,
-                    password: password.data.to_string(),
-                    hash: hex::encode(sha256hash(password.data.as_str())),
+                    password: password.password.to_string(),
+                    hash: hex::encode(sha256hash(password.password.as_str())),
                 })).await ?;
             }
         }
